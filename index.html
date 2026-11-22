@@ -158,6 +158,24 @@
     padding: 13px;
     margin-top: 10px;
   }
+  .btn-undo {
+    background: #94a3b8;
+    box-shadow: 0 3px 0 #64748b;
+    font-size: 0.85rem;
+    padding: 8px 12px;
+    margin-top: 10px;
+    width: auto;
+  }
+  .btn-del {
+    background: #fff;
+    color: #ef4444;
+    border: 1.5px solid #fca5a5;
+    box-shadow: none;
+    font-size: 0.8rem;
+    padding: 6px 10px;
+    margin-top: 10px;
+    width: auto;
+  }
 
   /* チケット表示 */
   .ticket {
@@ -272,6 +290,12 @@
     border-radius: 8px;
     transform: rotate(-10deg);
     font-size: 0.85rem;
+  }
+  .card-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
   }
   .manual-box {
     margin-top: 18px;
@@ -406,7 +430,6 @@
     return `${badge}${m}月${d}日(${w})`;
   }
 
-  // URLパラメータから事前予約を自動取り込み（LINEリンク用）
   window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('visitDate').value = getTodayStr(0);
     document.getElementById('mDate').value = getTodayStr(0);
@@ -414,7 +437,6 @@
     const params = new URLSearchParams(window.location.search);
     const addParam = params.get('add');
     if (addParam) {
-      // URLのパラメータを消してリロード時の重複防止
       window.history.replaceState({}, document.title, window.location.pathname);
       switchTab('staff');
       registerOrder(addParam, 'reserved');
@@ -445,7 +467,6 @@
     document.getElementById('guestName').value = names[Math.floor(Math.random() * names.length)];
   }
 
-  // チケット発行（お客さん側）
   function createTicket() {
     const name = document.getElementById('guestName').value.trim() || 'おきゃくさま';
     const date = document.getElementById('visitDate').value || getTodayStr(0);
@@ -456,7 +477,6 @@
     const payload = `KANSUKU|${id}|${name}|${date}|${time}|${item}`;
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=6&data=${encodeURIComponent(payload)}`;
 
-    // 店長がタップするだけで事前予約リストに入る専用URLを作成
     const baseUrl = window.location.origin + window.location.pathname;
     const syncUrl = `${baseUrl}?add=${encodeURIComponent(payload)}`;
 
@@ -484,7 +504,6 @@
     `;
   }
 
-  // QRスキャナ制御（店長側）
   function toggleScanner() {
     if (isScanning) stopScanner();
     else startScanner();
@@ -530,7 +549,6 @@
     document.getElementById('mName').value = '';
   }
 
-  // mode: 'reserved'（事前予約リストへ追加） or 'arrived'（来店QRチェックイン）
   function registerOrder(text, mode) {
     if (!text.startsWith('KANSUKU|')) {
       alert('カンスク屋の予約データではないみたいです！');
@@ -606,13 +624,27 @@
         ? '<span class="status-badge status-arrived">ご来店済</span>'
         : '<span class="status-badge status-reserved">事前よやく中</span>';
 
+      const actionButtons = !o.done
+        ? `
+          <div class="card-actions">
+            <button class="btn" style="padding:10px; margin-top:10px; font-size:0.9rem; flex:1;" onclick="markDone('${escapeHtml(o.id)}')">💮 ごあんない完了スタンプを押す</button>
+            <button class="btn btn-del" onclick="deleteOrder('${escapeHtml(o.id)}')">🗑️</button>
+          </div>
+        `
+        : `
+          <div class="card-actions">
+            <button class="btn btn-undo" onclick="undoDone('${escapeHtml(o.id)}')">↩️ 間違えたのでもとに戻す</button>
+            <button class="btn btn-del" onclick="deleteOrder('${escapeHtml(o.id)}')">🗑️</button>
+          </div>
+        `;
+
       html += `
         <div class="order-card ${o.done ? 'checked-in' : ''}">
           ${o.done ? '<div class="stamp">ごあんない済 💮</div>' : ''}
           <div style="font-size:0.8rem; color:#888;">${escapeHtml(o.id)} ${badge}</div>
           <div style="font-size:1.05rem; font-weight:bold; margin:4px 0;">⏰ ${escapeHtml(o.time)} ／ 👤 ${escapeHtml(o.name)} さま</div>
           <div style="font-size:0.9rem;">🧸 ${escapeHtml(o.item)}</div>
-          ${!o.done ? `<button class="btn" style="padding:8px; margin-top:10px; font-size:0.9rem;" onclick="markDone('${escapeHtml(o.id)}')">💮 ごあんない完了スタンプを押す</button>` : ''}
+          ${actionButtons}
         </div>
       `;
     });
@@ -623,12 +655,36 @@
   function markDone(id) {
     const orders = JSON.parse(localStorage.getItem('kansuku_orders') || '[]');
     const target = orders.find(o => o.id === id);
-    if (target) {
-      target.arrived = true;
-      target.done = true;
-    }
+    if (!target) return;
+
+    if (!confirm(`「${target.name} さま」をごあんない完了にしますか？`)) return;
+
+    target.arrived = true;
+    target.done = true;
     localStorage.setItem('kansuku_orders', JSON.stringify(orders));
     playChime();
+    renderOrders();
+  }
+
+  function undoDone(id) {
+    const orders = JSON.parse(localStorage.getItem('kansuku_orders') || '[]');
+    const target = orders.find(o => o.id === id);
+    if (!target) return;
+
+    target.done = false;
+    localStorage.setItem('kansuku_orders', JSON.stringify(orders));
+    renderOrders();
+  }
+
+  function deleteOrder(id) {
+    const orders = JSON.parse(localStorage.getItem('kansuku_orders') || '[]');
+    const target = orders.find(o => o.id === id);
+    if (!target) return;
+
+    if (!confirm(`⚠️ 本当に「${target.name} さま」のよやくを消しますか？\n（消すともとに戻せません）`)) return;
+
+    const updated = orders.filter(o => o.id !== id);
+    localStorage.setItem('kansuku_orders', JSON.stringify(updated));
     renderOrders();
   }
 
