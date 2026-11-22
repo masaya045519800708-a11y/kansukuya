@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>カンスク屋 来店予約＆ポイントカード</title>
+<title>カンスク屋 予約・ポイント・カンスクペイ</title>
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 <style>
   :root {
@@ -12,6 +12,7 @@
     --mint: #72efdd;
     --mint-dark: #38b2ac;
     --yellow: #ffd166;
+    --pay-red: #ff0033;
     --cream: #fff9fb;
     --brown: #5c4033;
     --shadow: 0 6px 16px rgba(255, 133, 162, 0.25);
@@ -33,25 +34,25 @@
   }
   header h1 {
     margin: 0;
-    font-size: 1.35rem;
+    font-size: 1.3rem;
     color: var(--pink);
     text-shadow: 1px 1px 0 var(--yellow);
   }
-  header p { margin: 4px 0 0; font-size: 0.8rem; font-weight: bold; }
+  header p { margin: 4px 0 0; font-size: 0.78rem; font-weight: bold; }
 
   .tabs {
     display: flex;
     max-width: 480px;
     margin: 14px auto 0;
-    padding: 0 10px;
-    gap: 5px;
+    padding: 0 8px;
+    gap: 4px;
   }
   .tab-btn {
     flex: 1;
-    padding: 11px 4px;
+    padding: 10px 2px;
     border: none;
     border-radius: 14px 14px 0 0;
-    font-size: 0.85rem;
+    font-size: 0.78rem;
     font-weight: bold;
     cursor: pointer;
     background: rgba(255,255,255,0.65);
@@ -63,11 +64,14 @@
     color: var(--pink);
     box-shadow: 0 -3px 10px rgba(0,0,0,0.05);
   }
+  .tab-btn.pay-tab.active {
+    color: var(--pay-red);
+  }
 
   .container {
     max-width: 480px;
     margin: 0 auto;
-    padding: 0 10px;
+    padding: 0 8px;
   }
   .card {
     background: #fff;
@@ -81,8 +85,8 @@
   label {
     display: block;
     font-weight: bold;
-    margin: 14px 0 6px;
-    font-size: 0.92rem;
+    margin: 12px 0 6px;
+    font-size: 0.9rem;
   }
   .row { display: flex; gap: 8px; }
   input, select {
@@ -97,11 +101,7 @@
   }
   input:focus, select:focus { border-color: var(--pink); }
 
-  .date-chips {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 8px;
-  }
+  .date-chips { display: flex; gap: 6px; margin-bottom: 8px; }
   .chip {
     flex: 1;
     padding: 8px 4px;
@@ -113,20 +113,16 @@
     font-size: 0.85rem;
     cursor: pointer;
   }
-  .chip.active {
-    background: var(--pink);
-    color: #fff;
-    border-color: var(--pink);
-  }
+  .chip.active { background: var(--pink); color: #fff; border-color: var(--pink); }
 
   .btn {
     display: inline-block;
     width: 100%;
     padding: 13px;
-    margin-top: 16px;
+    margin-top: 14px;
     border: none;
     border-radius: 18px;
-    font-size: 1rem;
+    font-size: 0.98rem;
     font-weight: bold;
     cursor: pointer;
     color: #fff;
@@ -151,10 +147,14 @@
     background: linear-gradient(90deg, #38b2ac, #4fd1c5);
     box-shadow: 0 4px 0 #28807b;
   }
+  .btn-pay {
+    background: linear-gradient(90deg, #ff0033, #ff4d6d);
+    box-shadow: 0 4px 0 #b30024;
+  }
   .btn-line {
     background: #06c755;
     box-shadow: 0 4px 0 #049c42;
-    font-size: 0.92rem;
+    font-size: 0.9rem;
     padding: 12px;
     margin-top: 10px;
   }
@@ -177,9 +177,9 @@
     width: auto;
   }
 
-  /* チケット表示 */
+  /* チケット・QR表示 */
   .ticket {
-    margin-top: 18px;
+    margin-top: 16px;
     background: var(--cream);
     border: 3px dashed var(--pink);
     border-radius: 20px;
@@ -208,13 +208,13 @@
     margin: 10px 0;
     border: 2px solid var(--pink-light);
   }
-  .qr-box img { width: 170px; height: 170px; display: block; }
+  .qr-box img { width: 165px; height: 165px; display: block; }
   .ticket-info {
     text-align: left;
     background: #fff;
     padding: 12px;
     border-radius: 12px;
-    font-size: 0.92rem;
+    font-size: 0.9rem;
     line-height: 1.7;
   }
   .step-note {
@@ -227,14 +227,83 @@
     line-height: 1.5;
   }
 
+  /* カンスクペイ画面 */
+  .pay-wallet {
+    background: linear-gradient(135deg, #ff0033 0%, #ff5c7c 100%);
+    color: #fff;
+    border-radius: 22px;
+    padding: 18px;
+    box-shadow: 0 6px 16px rgba(255, 0, 51, 0.25);
+    position: relative;
+  }
+  .pay-logo {
+    font-weight: 900;
+    font-size: 1.15rem;
+    letter-spacing: 0.05em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .pay-balance-box {
+    background: rgba(255,255,255,0.18);
+    border-radius: 14px;
+    padding: 12px;
+    margin: 12px 0;
+    text-align: center;
+  }
+  .pay-balance-num {
+    font-size: 2rem;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+  }
+  .charge-chips {
+    display: flex;
+    gap: 6px;
+  }
+  .charge-btn {
+    flex: 1;
+    background: #fff;
+    color: var(--pay-red);
+    border: none;
+    border-radius: 10px;
+    padding: 7px 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .amount-chips {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin: 8px 0;
+  }
+  .amt-btn {
+    padding: 10px 4px;
+    border: 2px solid #fecdd3;
+    background: #fff1f2;
+    color: var(--pay-red);
+    font-weight: bold;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+  .pay-receipt {
+    margin-top: 16px;
+    background: #fff1f2;
+    border: 3px solid var(--pay-red);
+    border-radius: 20px;
+    padding: 16px;
+    text-align: center;
+    animation: pop 0.3s ease;
+  }
+
   /* ポイントカード画面 */
   .point-card {
     background: linear-gradient(135deg, #fff5f8 0%, #fffbeb 100%);
     border: 3px solid var(--pink);
     border-radius: 22px;
     padding: 16px;
-    margin-top: 12px;
-    box-shadow: 0 4px 12px rgba(255, 133, 162, 0.18);
+    margin-top: 8px;
   }
   .point-header {
     display: flex;
@@ -264,13 +333,11 @@
     border: 2px dashed #f9a8d4;
     border-radius: 50%;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
     font-size: 0.75rem;
     font-weight: bold;
     color: #f472b6;
-    position: relative;
   }
   .stamp-slot.filled {
     background: #ffe4e6;
@@ -279,22 +346,19 @@
     font-size: 1.35rem;
     animation: pop 0.25s ease;
   }
-  .stamp-slot.goal {
-    border-color: #f59e0b;
-    background: #fef3c7;
-  }
+  .stamp-slot.goal { border-color: #f59e0b; background: #fef3c7; }
   .reward-box {
     background: #fff;
     border-radius: 14px;
     padding: 10px 12px;
-    font-size: 0.85rem;
+    font-size: 0.84rem;
     border: 1.5px solid var(--pink-light);
     margin-top: 10px;
     line-height: 1.6;
   }
 
   /* 店長受付画面 */
-  #reader {
+  .scanner-box {
     width: 100%;
     border-radius: 16px;
     overflow: hidden;
@@ -302,12 +366,17 @@
     border: 3px solid var(--mint-dark);
     display: none;
   }
-  .filter-bar {
+  .sales-banner {
+    background: linear-gradient(90deg, #fef3c7, #fde68a);
+    border: 2px solid #f59e0b;
+    border-radius: 16px;
+    padding: 12px 14px;
+    margin-top: 12px;
     display: flex;
-    gap: 8px;
-    margin-top: 16px;
+    justify-content: space-between;
     align-items: center;
   }
+  .filter-bar { display: flex; gap: 8px; margin-top: 16px; align-items: center; }
   .date-header {
     background: var(--pink-light);
     color: var(--brown);
@@ -325,10 +394,7 @@
     margin-top: 8px;
     position: relative;
   }
-  .order-card.checked-in {
-    background: #f0fdf4;
-    border-color: #86efac;
-  }
+  .order-card.checked-in { background: #f0fdf4; border-color: #86efac; }
   .status-badge {
     display: inline-block;
     font-size: 0.75rem;
@@ -351,14 +417,9 @@
     transform: rotate(-10deg);
     font-size: 0.82rem;
   }
-  .card-actions {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    justify-content: space-between;
-  }
+  .card-actions { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
   .manual-box {
-    margin-top: 16px;
+    margin-top: 12px;
     padding: 12px;
     background: #f8fafc;
     border-radius: 16px;
@@ -370,13 +431,14 @@
 
 <header>
   <h1>🍞 スクイーズのお店 カンスク屋 🍩</h1>
-  <p>店長：かんな ／ デジタル来店よやく＆会員証</p>
+  <p>店長：かんな ／ よやく・ポイント・カンスクペイ</p>
 </header>
 
 <div class="tabs">
-  <button class="tab-btn active" id="tab-guest" onclick="switchTab('guest')">🎟 来店よやく</button>
+  <button class="tab-btn active" id="tab-guest" onclick="switchTab('guest')">🎟 よやく</button>
+  <button class="tab-btn pay-tab" id="tab-pay" onclick="switchTab('pay')">💳 ペイ</button>
   <button class="tab-btn" id="tab-point" onclick="switchTab('point')">🌟 ポイント</button>
-  <button class="tab-btn" id="tab-staff" onclick="switchTab('staff')">👑 店長うけつけ</button>
+  <button class="tab-btn" id="tab-staff" onclick="switchTab('staff')">👑 店長</button>
 </div>
 
 <div class="container">
@@ -429,11 +491,47 @@
       </select>
 
       <button class="btn" onclick="createTicket()">🎫 予約チケットを発行する！</button>
-
       <div id="ticketArea"></div>
     </div>
 
-    <!-- ② 来店ポイントカード画面 -->
+    <!-- ② カンスクペイ決済画面 -->
+    <div id="pay" class="section">
+      <div class="pay-wallet">
+        <div class="pay-logo">
+          <span>📱 KansukuPay</span>
+          <span style="font-size:0.78rem; background:rgba(0,0,0,0.2); padding:3px 8px; border-radius:10px;">カンスク屋専用</span>
+        </div>
+        <div class="pay-balance-box">
+          <div style="font-size:0.8rem; opacity:0.9;">つかえる残高</div>
+          <div class="pay-balance-num">¥ <span id="payBalance">3,000</span></div>
+        </div>
+        <div class="charge-chips">
+          <button class="charge-btn" onclick="chargePay(500)">＋500円</button>
+          <button class="charge-btn" onclick="chargePay(1000)">＋1,000円</button>
+          <button class="charge-btn" onclick="chargePay(3000)">＋3,000円</button>
+        </div>
+      </div>
+
+      <button class="btn btn-pay" id="payScanBtn" onclick="togglePayScanner()">📷 お店のQRをスキャンして払う</button>
+      <div id="payReader" class="scanner-box" style="border-color:#ff0033;"></div>
+
+      <div id="payInputBox" style="margin-top:14px; background:#fff; border:2px solid #fecdd3; border-radius:18px; padding:14px;">
+        <div style="font-size:0.85rem; font-weight:bold; color:#ff0033;" id="payStoreLabel">🏪 支払い先：カンスク屋</div>
+        <label style="margin-top:8px;">お支払い金額（円）</label>
+        <div class="amount-chips">
+          <button class="amt-btn" onclick="setPayAmt(100)">100円</button>
+          <button class="amt-btn" onclick="setPayAmt(300)">300円</button>
+          <button class="amt-btn" onclick="setPayAmt(500)">500円</button>
+          <button class="amt-btn" onclick="setPayAmt(1000)">1000円</button>
+        </div>
+        <input type="number" id="payAmount" placeholder="金額を入力（例：500）" inputmode="numeric">
+        <button class="btn btn-pay" onclick="executePayment()">💸 カンスクペイで支払う！</button>
+      </div>
+
+      <div id="payReceiptArea"></div>
+    </div>
+
+    <!-- ③ 来店ポイントカード画面 -->
     <div id="point" class="section">
       <div class="point-card">
         <div class="point-header">
@@ -479,11 +577,30 @@
       </details>
     </div>
 
-    <!-- ③ 店長受付画面 -->
+    <!-- ④ 店長受付画面 -->
     <div id="staff" class="section">
-      <p style="margin:0; font-size:0.88rem;">来店よやくQRも、ポイントQRもこのカメラでよみとれるよ！</p>
-      <button class="btn btn-mint" id="scanBtn" onclick="toggleScanner()">📷 カメラでQR読み取り（来店・ポイント）</button>
-      <div id="reader"></div>
+      <div class="sales-banner">
+        <div>
+          <div style="font-size:0.78rem; font-weight:bold; color:#92400e;">💰 カンスク屋 累計うりあげ</div>
+          <div style="font-size:1.4rem; font-weight:900; color:#b45309;">¥ <span id="totalSales">0</span></div>
+        </div>
+        <button class="btn btn-sub" style="padding:8px 10px; font-size:0.78rem;" onclick="resetSales()">リセット</button>
+      </div>
+
+      <p style="margin:12px 0 0; font-size:0.86rem;">来店QR・ポイントQR・支払い完了QRを全部よみとれます！</p>
+      <button class="btn btn-mint" id="scanBtn" onclick="toggleScanner()">📷 店長カメラ起動（受付・売上・ポイント）</button>
+      <div id="reader" class="scanner-box"></div>
+
+      <details class="manual-box">
+        <summary style="font-weight:bold; font-size:0.85rem; cursor:pointer;">🏪 おみせの支払い用QRコード（店頭用）</summary>
+        <div style="text-align:center; margin-top:10px;">
+          <div style="font-size:0.82rem; margin-bottom:4px;">おきゃくさんに「ペイ」で読み取ってもらおう！</div>
+          <div class="qr-box">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=6&data=KANSUKU_STORE_PAY" alt="店舗決済QR">
+          </div>
+          <div style="font-size:0.75rem; color:#666;">※スクショして印刷するとレジ横に置けます！</div>
+        </div>
+      </details>
 
       <details class="manual-box">
         <summary style="font-weight:bold; font-size:0.85rem; cursor:pointer;">✍️ 店長が直接よやくを追加する</summary>
@@ -512,8 +629,10 @@
 </div>
 
 <script>
-  let html5QrCode = null;
-  let isScanning = false;
+  let staffQrCode = null;
+  let isStaffScanning = false;
+  let payQrCode = null;
+  let isPayScanning = false;
 
   function getTodayStr(offsetDays = 0) {
     const d = new Date();
@@ -540,6 +659,12 @@
   window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('visitDate').value = getTodayStr(0);
     document.getElementById('mDate').value = getTodayStr(0);
+
+    if (localStorage.getItem('kansuku_pay_balance') === null) {
+      localStorage.setItem('kansuku_pay_balance', '3000');
+    }
+    updatePayBalanceUI();
+    updateSalesUI();
 
     const savedName = localStorage.getItem('kansuku_member_name') || '';
     if (savedName) {
@@ -585,9 +710,11 @@
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     document.getElementById('tab-' + tab).classList.add('active');
     document.getElementById(tab).classList.add('active');
-    if (tab === 'staff') renderOrders();
+    if (tab === 'staff') { renderOrders(); updateSalesUI(); }
     if (tab === 'point') renderPointCard();
-    if (tab !== 'staff' && isScanning) stopScanner();
+    if (tab === 'pay') updatePayBalanceUI();
+    if (tab !== 'staff' && isStaffScanning) stopScanner();
+    if (tab !== 'pay' && isPayScanning) stopPayScanner();
   }
 
   function randomName() {
@@ -636,7 +763,110 @@
     `;
   }
 
-  // ② ポイントカード描画
+  // ② カンスクペイ機能
+  function updatePayBalanceUI() {
+    const bal = Number(localStorage.getItem('kansuku_pay_balance') || '0');
+    document.getElementById('payBalance').textContent = bal.toLocaleString();
+  }
+
+  function chargePay(amount) {
+    let bal = Number(localStorage.getItem('kansuku_pay_balance') || '0');
+    bal += amount;
+    localStorage.setItem('kansuku_pay_balance', String(bal));
+    playPaySound();
+    updatePayBalanceUI();
+    alert(`💰 ${amount.toLocaleString()}円 チャージしました！`);
+  }
+
+  function setPayAmt(amt) {
+    document.getElementById('payAmount').value = amt;
+  }
+
+  function togglePayScanner() {
+    if (isPayScanning) stopPayScanner();
+    else startPayScanner();
+  }
+
+  function startPayScanner() {
+    const readerEl = document.getElementById('payReader');
+    readerEl.style.display = 'block';
+    payQrCode = new Html5Qrcode("payReader");
+    payQrCode.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: { width: 220, height: 220 } },
+      (decodedText) => {
+        if (decodedText === 'KANSUKU_STORE_PAY') {
+          playChime();
+          stopPayScanner();
+          document.getElementById('payStoreLabel').textContent = '✅ スキャン完了：カンスク屋 本店';
+          document.getElementById('payAmount').focus();
+        } else {
+          alert('カンスク屋のお支払いQRコードではないみたいです！');
+        }
+      },
+      () => {}
+    ).then(() => {
+      isPayScanning = true;
+      document.getElementById('payScanBtn').textContent = '⏹ カメラをとめる';
+    }).catch(() => {
+      alert('カメラを起動できませんでした。下の金額入力からそのまま支払えます！');
+      readerEl.style.display = 'none';
+    });
+  }
+
+  function stopPayScanner() {
+    if (payQrCode && isPayScanning) {
+      payQrCode.stop().then(() => {
+        document.getElementById('payReader').style.display = 'none';
+        document.getElementById('payScanBtn').textContent = '📷 お店のQRをスキャンして払う';
+        isPayScanning = false;
+      });
+    }
+  }
+
+  function executePayment() {
+    const amt = Number(document.getElementById('payAmount').value);
+    if (!amt || amt <= 0) {
+      alert('お支払い金額を入力してね！');
+      return;
+    }
+    let bal = Number(localStorage.getItem('kansuku_pay_balance') || '0');
+    if (bal < amt) {
+      alert('残高が足りません！上のボタンからチャージしてね！');
+      return;
+    }
+
+    const name = localStorage.getItem('kansuku_member_name') || document.getElementById('guestName').value.trim() || 'おきゃくさま';
+    if (!confirm(`カンスク屋に ${amt.toLocaleString()}円 を支払いますか？`)) return;
+
+    bal -= amt;
+    localStorage.setItem('kansuku_pay_balance', String(bal));
+    updatePayBalanceUI();
+    playPaySound();
+
+    const txId = 'PAY-' + Math.floor(10000 + Math.random() * 90000);
+    const now = new Date();
+    const timeStr = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+    const payPayload = `KANSUKU_PAID|${txId}|${name}|${amt}`;
+    const receiptQr = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=6&data=${encodeURIComponent(payPayload)}`;
+
+    document.getElementById('payAmount').value = '';
+    document.getElementById('payReceiptArea').innerHTML = `
+      <div class="pay-receipt">
+        <div style="color:#ff0033; font-weight:900; font-size:1.1rem;">🎉 お支払い完了！</div>
+        <div style="font-size:1.8rem; font-weight:900; margin:6px 0;">¥ ${amt.toLocaleString()}</div>
+        <div style="font-size:0.82rem; color:#666;">${timeStr} ／ ${escapeHtml(name)} さま</div>
+        <div class="qr-box" style="border-color:#fecdd3; margin-top:10px;">
+          <img src="${receiptQr}" alt="支払い完了QR">
+        </div>
+        <div style="font-size:0.82rem; font-weight:bold; color:#ff0033;">
+          店長のカメラでこの画面を読んでもらうと<br>お店の売上に記録されるよ！
+        </div>
+      </div>
+    `;
+  }
+
+  // ③ ポイントカード描画
   function renderPointCard() {
     const name = localStorage.getItem('kansuku_member_name') || document.getElementById('guestName').value.trim() || 'おきゃくさま';
     const points = Number(localStorage.getItem('kansuku_points') || '0');
@@ -650,7 +880,6 @@
     else if (totalVisits >= 5) rank = '🌟 シルバー常連会員';
     document.getElementById('cardRank').textContent = rank;
 
-    // 10マスのスタンプ表示
     let gridHtml = '';
     for (let i = 1; i <= 10; i++) {
       const isFilled = i <= points;
@@ -667,11 +896,10 @@
     }
     document.getElementById('stampsGrid').innerHTML = gridHtml;
 
-    // 特典達成ボタン
     const rewardArea = document.getElementById('rewardActionArea');
     if (points >= 10) {
       rewardArea.innerHTML = `
-        <button class="btn" style="background:linear-gradient(90deg,#f59e0b,#fbbf24); box-shadow:0 4px 0 #b45309;" onclick="useReward(10)">
+        <button class="btn" style="background:linear-gradient(90deg,#f59e0b,#fbbf24); box-shadow:0 4px 0 #b45309;" onclick="useReward()">
           👑 10個満タン特典をつかう！（新しいカードへ）
         </button>
       `;
@@ -685,7 +913,6 @@
       rewardArea.innerHTML = '';
     }
 
-    // ポイント用QRコード生成
     const pointPayload = `KANSUKU_PT|${name}|${points}`;
     document.getElementById('pointQrImg').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=6&data=${encodeURIComponent(pointPayload)}`;
   }
@@ -710,7 +937,7 @@
     if (points === 10) alert('👑 すごい！スタンプ10個満タン達成！！');
   }
 
-  function useReward(cost) {
+  function useReward() {
     if (!confirm('店長に画面を見せて、10個満タン特典をつかいますか？（スタンプは0に戻って2周目スタート！）')) return;
     localStorage.setItem('kansuku_points', '0');
     playChime();
@@ -723,17 +950,28 @@
     renderPointCard();
   }
 
-  // ③ QRスキャナ制御（来店QR・ポイントQR両対応）
+  // ④ 店長カメラ・売上・予約管理
+  function updateSalesUI() {
+    const sales = Number(localStorage.getItem('kansuku_total_sales') || '0');
+    document.getElementById('totalSales').textContent = sales.toLocaleString();
+  }
+
+  function resetSales() {
+    if (!confirm('累計うりあげを 0円 にリセットしますか？')) return;
+    localStorage.setItem('kansuku_total_sales', '0');
+    updateSalesUI();
+  }
+
   function toggleScanner() {
-    if (isScanning) stopScanner();
+    if (isStaffScanning) stopScanner();
     else startScanner();
   }
 
   function startScanner() {
     const readerEl = document.getElementById('reader');
     readerEl.style.display = 'block';
-    html5QrCode = new Html5Qrcode("reader");
-    html5QrCode.start(
+    staffQrCode = new Html5Qrcode("reader");
+    staffQrCode.start(
       { facingMode: "environment" },
       { fps: 10, qrbox: { width: 220, height: 220 } },
       (decodedText) => {
@@ -741,7 +979,7 @@
       },
       () => {}
     ).then(() => {
-      isScanning = true;
+      isStaffScanning = true;
       document.getElementById('scanBtn').textContent = '⏹ カメラをとめる';
     }).catch(() => {
       alert('カメラを起動できませんでした。ChromeやSafariで開いているか確認してね！');
@@ -750,24 +988,46 @@
   }
 
   function stopScanner() {
-    if (html5QrCode && isScanning) {
-      html5QrCode.stop().then(() => {
+    if (staffQrCode && isStaffScanning) {
+      staffQrCode.stop().then(() => {
         document.getElementById('reader').style.display = 'none';
-        document.getElementById('scanBtn').textContent = '📷 カメラでQR読み取り（来店・ポイント）';
-        isScanning = false;
+        document.getElementById('scanBtn').textContent = '📷 店長カメラ起動（受付・売上・ポイント）';
+        isStaffScanning = false;
       });
     }
   }
 
   function handleScannedQr(text) {
-    // ポイントカードQRの場合
+    // 1. カンスクペイ支払い完了QR
+    if (text.startsWith('KANSUKU_PAID|')) {
+      const [, txId, name, amtStr] = text.split('|');
+      const amt = Number(amtStr);
+      const recordedTxs = JSON.parse(localStorage.getItem('kansuku_paid_txs') || '[]');
+      if (recordedTxs.includes(txId)) {
+        alert('このお支払いはすでに売上に登録済みです！');
+        return true;
+      }
+      recordedTxs.push(txId);
+      localStorage.setItem('kansuku_paid_txs', JSON.stringify(recordedTxs));
+
+      let sales = Number(localStorage.getItem('kansuku_total_sales') || '0');
+      sales += amt;
+      localStorage.setItem('kansuku_total_sales', String(sales));
+      updateSalesUI();
+      playPaySound();
+      alert(`💰 カンスクペイ売上確認！\n\n👤 ${name} さまから\n【 ${amt.toLocaleString()}円 】を受け取りました！`);
+      return true;
+    }
+
+    // 2. ポイントカードQR
     if (text.startsWith('KANSUKU_PT|')) {
       const [, name, pts] = text.split('|');
       playChime();
       alert(`🌟 ポイントカード確認OK！\n\n👤 ${name} さま（現在 ${pts} 個）\nおきゃくさんの画面で「スタンプを1個押す」ボタンを押してもらってね！`);
       return true;
     }
-    // 来店予約QRの場合
+
+    // 3. 来店予約QR
     return registerOrder(text, 'arrived');
   }
 
@@ -888,9 +1148,7 @@
     const orders = JSON.parse(localStorage.getItem('kansuku_orders') || '[]');
     const target = orders.find(o => o.id === id);
     if (!target) return;
-
     if (!confirm(`「${target.name} さま」をごあんない完了にしますか？`)) return;
-
     target.arrived = true;
     target.done = true;
     localStorage.setItem('kansuku_orders', JSON.stringify(orders));
@@ -902,7 +1160,6 @@
     const orders = JSON.parse(localStorage.getItem('kansuku_orders') || '[]');
     const target = orders.find(o => o.id === id);
     if (!target) return;
-
     target.done = false;
     localStorage.setItem('kansuku_orders', JSON.stringify(orders));
     renderOrders();
@@ -912,9 +1169,7 @@
     const orders = JSON.parse(localStorage.getItem('kansuku_orders') || '[]');
     const target = orders.find(o => o.id === id);
     if (!target) return;
-
     if (!confirm(`⚠️ 本当に「${target.name} さま」のよやくを消しますか？\n（消すともとに戻せません）`)) return;
-
     const updated = orders.filter(o => o.id !== id);
     localStorage.setItem('kansuku_orders', JSON.stringify(updated));
     renderOrders();
@@ -934,6 +1189,26 @@
       gain.connect(ctx.destination);
       osc.start();
       osc.stop(ctx.currentTime + 0.4);
+    } catch(e) {}
+  }
+
+  // PayPay風の2音決済サウンド（チャリン♪）
+  function playPaySound() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const notes = [1046.50, 1318.51, 1567.98]; // ド・ミ・ソの和音アルペジオ
+      notes.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.08);
+        gain.gain.setValueAtTime(0.18, ctx.currentTime + idx * 0.08);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.08 + 0.35);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(ctx.currentTime + idx * 0.08);
+        osc.stop(ctx.currentTime + idx * 0.08 + 0.35);
+      });
     } catch(e) {}
   }
 
