@@ -1,1 +1,478 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>カンスク屋 来店予約アプリ</title>
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<style>
+  :root {
+    --pink: #ff85a2;
+    --pink-light: #ffe5ec;
+    --mint: #72efdd;
+    --mint-dark: #38b2ac;
+    --yellow: #ffd166;
+    --cream: #fff9fb;
+    --brown: #5c4033;
+    --shadow: 0 6px 16px rgba(255, 133, 162, 0.25);
+  }
+  * { box-sizing: border-box; font-family: "Hiragino Maru Gothic ProN", "Rounded Mplus 1c", sans-serif; }
+  body {
+    margin: 0; padding: 0;
+    background: linear-gradient(135deg, #ffe5ec 0%, #e0fbfc 100%);
+    color: var(--brown);
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+  header {
+    background: #fff;
+    padding: 16px;
+    text-align: center;
+    border-bottom: 4px dashed var(--pink);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  }
+  header h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: var(--pink);
+    text-shadow: 1px 1px 0 var(--yellow);
+  }
+  header p { margin: 4px 0 0; font-size: 0.85rem; font-weight: bold; }
 
+  .tabs {
+    display: flex;
+    max-width: 480px;
+    margin: 16px auto 0;
+    padding: 0 12px;
+    gap: 8px;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 12px 8px;
+    border: none;
+    border-radius: 16px 16px 0 0;
+    font-size: 0.95rem;
+    font-weight: bold;
+    cursor: pointer;
+    background: rgba(255,255,255,0.6);
+    color: var(--brown);
+    transition: 0.2s;
+  }
+  .tab-btn.active {
+    background: #fff;
+    color: var(--pink);
+    box-shadow: 0 -3px 10px rgba(0,0,0,0.05);
+  }
+
+  .container {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 0 12px;
+  }
+  .card {
+    background: #fff;
+    border-radius: 0 0 24px 24px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  label {
+    display: block;
+    font-weight: bold;
+    margin: 14px 0 6px;
+    font-size: 0.95rem;
+  }
+  .row { display: flex; gap: 8px; }
+  input, select {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid var(--pink-light);
+    border-radius: 14px;
+    font-size: 1rem;
+    background: var(--cream);
+    color: var(--brown);
+    outline: none;
+  }
+  input:focus, select:focus { border-color: var(--pink); }
+
+  .btn {
+    display: inline-block;
+    width: 100%;
+    padding: 14px;
+    margin-top: 18px;
+    border: none;
+    border-radius: 18px;
+    font-size: 1.05rem;
+    font-weight: bold;
+    cursor: pointer;
+    color: #fff;
+    background: linear-gradient(90deg, #ff85a2, #ff9ebb);
+    box-shadow: 0 4px 0 #e0577b;
+    transition: transform 0.1s;
+  }
+  .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #e0577b; }
+  .btn-sub {
+    width: auto;
+    margin-top: 0;
+    padding: 0 14px;
+    font-size: 0.85rem;
+    background: var(--yellow);
+    color: var(--brown);
+    box-shadow: 0 3px 0 #d9a734;
+    white-space: nowrap;
+  }
+  .btn-mint {
+    background: linear-gradient(90deg, #38b2ac, #4fd1c5);
+    box-shadow: 0 4px 0 #28807b;
+  }
+
+  /* チケット表示 */
+  .ticket {
+    margin-top: 20px;
+    background: var(--cream);
+    border: 3px dashed var(--pink);
+    border-radius: 20px;
+    padding: 18px;
+    text-align: center;
+    animation: pop 0.3s ease;
+  }
+  @keyframes pop {
+    0% { transform: scale(0.9); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .ticket-badge {
+    display: inline-block;
+    background: var(--pink);
+    color: #fff;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: bold;
+  }
+  .qr-box {
+    background: #fff;
+    padding: 12px;
+    border-radius: 16px;
+    display: inline-block;
+    margin: 12px 0;
+    border: 2px solid var(--pink-light);
+  }
+  .qr-box img { width: 190px; height: 190px; display: block; }
+  .ticket-info {
+    text-align: left;
+    background: #fff;
+    padding: 12px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+  .spell-box {
+    margin-top: 10px;
+    font-size: 0.75rem;
+    color: #888;
+  }
+
+  /* 店長受付画面 */
+  #reader {
+    width: 100%;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-top: 12px;
+    border: 3px solid var(--mint-dark);
+    display: none;
+  }
+  .order-card {
+    background: var(--cream);
+    border: 2px solid var(--pink-light);
+    border-radius: 16px;
+    padding: 14px;
+    margin-top: 12px;
+    position: relative;
+  }
+  .order-card.done {
+    background: #f0fdf4;
+    border-color: #86efac;
+  }
+  .stamp {
+    position: absolute;
+    right: 12px;
+    top: 12px;
+    border: 3px solid #ef4444;
+    color: #ef4444;
+    font-weight: bold;
+    padding: 2px 8px;
+    border-radius: 8px;
+    transform: rotate(-10deg);
+    font-size: 0.85rem;
+  }
+  .manual-box {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 2px dotted #ddd;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🍞 スクイーズのお店 カンスク屋 🍩</h1>
+  <p>店長：かんな ／ デジタル来店よやく</p>
+</header>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('guest')">🎟 おきゃくさん予約</button>
+  <button class="tab-btn" onclick="switchTab('staff')">👑 店長うけつけ</button>
+</div>
+
+<div class="container">
+  <div class="card">
+
+    <!-- お客さん画面 -->
+    <div id="guest" class="section active">
+      <label>おなまえ（ニックネーム）</label>
+      <div class="row">
+        <input type="text" id="guestName" placeholder="例：パパ、ママ">
+        <button class="btn btn-sub" onclick="randomName()">🎲 おまかせ</button>
+      </div>
+
+      <label>らいてん時間</label>
+      <select id="visitTime">
+        <option value="16:00">16:00（オープンすぐ！）</option>
+        <option value="16:30">16:30</option>
+        <option value="17:00">17:00</option>
+        <option value="17:30">17:30</option>
+        <option value="18:00">18:00</option>
+        <option value="18:30">18:30</option>
+        <option value="19:00">19:00</option>
+        <option value="19:30">19:30</option>
+        <option value="20:00">20:00</option>
+        <option value="20:30">20:30</option>
+        <option value="21:00">21:00</option>
+        <option value="21:30">21:30</option>
+        <option value="22:00">22:00</option>
+        <option value="22:30">22:30</option>
+        <option value="23:00">23:00</option>
+        <option value="23:30">23:30</option>
+      </select>
+
+      <label>おめあてのスクイーズ</label>
+      <select id="itemSelect">
+        <option value="ふわふわ食パン🍞">ふわふわ食パン 🍞</option>
+        <option value="いちごショートケーキ🍰">いちごショートケーキ 🍰</option>
+        <option value="カラフルドーナツ🍩">カラフルドーナツ 🍩</option>
+        <option value="うさぎマシュマロ🐰">うさぎマシュマロ 🐰</option>
+        <option value="にくきゅうプニプニ🐾">にくきゅうプニプニ 🐾</option>
+        <option value="店長おすすめセット✨">店長おすすめセット ✨</option>
+      </select>
+
+      <button class="btn" onclick="createTicket()">🎫 予約チケットを発行する！</button>
+
+      <div id="ticketArea"></div>
+    </div>
+
+    <!-- 店長受付画面 -->
+    <div id="staff" class="section">
+      <p style="margin:0; font-size:0.9rem;">おきゃくさんのQRコードをカメラでよみとってね！</p>
+      <button class="btn btn-mint" id="scanBtn" onclick="toggleScanner()">📷 カメラでQR読み取りスタート</button>
+      <div id="reader"></div>
+
+      <div class="manual-box">
+        <label style="margin-top:0; font-size:0.85rem;">カメラが使えない時は「じゅもん」を貼り付け：</label>
+        <div class="row">
+          <input type="text" id="spellInput" placeholder="KANSUKU|...">
+          <button class="btn btn-sub" onclick="importFromSpell()">登録</button>
+        </div>
+      </div>
+
+      <label style="margin-top:20px;">📋 本日のよやくリスト</label>
+      <div id="orderList"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  let html5QrCode = null;
+  let isScanning = false;
+
+  // タブ切り替え
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById(tab).classList.add('active');
+    if (tab === 'staff') renderOrders();
+    if (tab !== 'staff' && isScanning) stopScanner();
+  }
+
+  // おまかせ名前
+  function randomName() {
+    const names = ['パパ', 'ママ', 'うさぎさん', 'くまさん', 'ねこちゃん', '常連さん'];
+    document.getElementById('guestName').value = names[Math.floor(Math.random() * names.length)];
+  }
+
+  // チケット発行（お客さん側）
+  function createTicket() {
+    const name = document.getElementById('guestName').value.trim() || 'おきゃくさま';
+    const time = document.getElementById('visitTime').value;
+    const item = document.getElementById('itemSelect').value;
+    const id = 'KS-' + Math.floor(1000 + Math.random() * 9000);
+
+    // QRに埋め込む文字列データ（コンパクトにして読み取りやすくする）
+    const payload = `KANSUKU|${id}|${name}|${time}|${item}`;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=6&data=${encodeURIComponent(payload)}`;
+
+    document.getElementById('ticketArea').innerHTML = `
+      <div class="ticket">
+        <span class="ticket-badge">予約番号：${id}</span>
+        <div class="qr-box">
+          <img src="${qrUrl}" alt="予約QRコード">
+        </div>
+        <div class="ticket-info">
+          👤 <b>おなまえ：</b>${escapeHtml(name)} さま<br>
+          ⏰ <b>らいてん：</b>${escapeHtml(time)}<br>
+          🧸 <b>おめあて：</b>${escapeHtml(item)}
+        </div>
+        <p style="font-size:0.85rem; margin:12px 0 6px; font-weight:bold; color:#e0577b;">
+          お店についたら店長にこの画面を見せてね！
+        </p>
+        <div class="spell-box">
+          <button class="btn btn-sub" style="font-size:0.75rem; padding:6px 10px;" onclick="copySpell('${escapeHtml(payload)}')">📋 じゅもんをコピー</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function copySpell(text) {
+    navigator.clipboard.writeText(text).then(() => {
+      alert('じゅもんをコピーしました！LINEなどで店長に送れます。');
+    });
+  }
+
+  // QRスキャナ制御（店長側）
+  function toggleScanner() {
+    if (isScanning) {
+      stopScanner();
+    } else {
+      startScanner();
+    }
+  }
+
+  function startScanner() {
+    const readerEl = document.getElementById('reader');
+    readerEl.style.display = 'block';
+    html5QrCode = new Html5Qrcode("reader");
+    html5QrCode.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: { width: 220, height: 220 } },
+      (decodedText) => {
+        if (registerPayload(decodedText)) {
+          stopScanner();
+        }
+      },
+      () => {}
+    ).then(() => {
+      isScanning = true;
+      document.getElementById('scanBtn').textContent = '⏹ カメラをとめる';
+    }).catch(err => {
+      alert('カメラを起動できませんでした。HTTPS環境（tiiny.hostやGitHub Pages等）で開いているか確認してね！');
+      readerEl.style.display = 'none';
+    });
+  }
+
+  function stopScanner() {
+    if (html5QrCode && isScanning) {
+      html5QrCode.stop().then(() => {
+        document.getElementById('reader').style.display = 'none';
+        document.getElementById('scanBtn').textContent = '📷 カメラでQR読み取りスタート';
+        isScanning = false;
+      });
+    }
+  }
+
+  // じゅもん手動登録
+  function importFromSpell() {
+    const val = document.getElementById('spellInput').value.trim();
+    if (registerPayload(val)) {
+      document.getElementById('spellInput').value = '';
+    }
+  }
+
+  // 予約データの解析と保存
+  function registerPayload(text) {
+    if (!text.startsWith('KANSUKU|')) {
+      alert('カンスク屋の予約QRコードではないみたいです！');
+      return false;
+    }
+    const parts = text.split('|');
+    if (parts.length < 5) return false;
+
+    const [, id, name, time, item] = parts;
+    const orders = JSON.parse(localStorage.getItem('kansuku_orders') || '[]');
+
+    if (orders.some(o => o.id === id)) {
+      alert(`「${name} さま（${id}）」はすでにうけつけ済みです！`);
+      return true;
+    }
+
+    orders.unshift({ id, name, time, item, done: false });
+    localStorage.setItem('kansuku_orders', JSON.stringify(orders));
+    playChime();
+    alert(`🎉 ピコン！\n${name} さま（${time}）のよやくを受け付けました！`);
+    renderOrders();
+    return true;
+  }
+
+  // 受付リスト描画
+  function renderOrders() {
+    const orders = JSON.parse(localStorage.getItem('kansuku_orders') || '[]');
+    const listEl = document.getElementById('orderList');
+    if (orders.length === 0) {
+      listEl.innerHTML = '<p style="text-align:center; color:#999; font-size:0.9rem;">まだよやくはありません</p>';
+      return;
+    }
+    listEl.innerHTML = orders.map((o, idx) => `
+      <div class="order-card ${o.done ? 'done' : ''}">
+        ${o.done ? '<div class="stamp">うけつけ済 💮</div>' : ''}
+        <div style="font-size:0.8rem; color:#888;">${escapeHtml(o.id)}</div>
+        <div style="font-size:1.05rem; font-weight:bold; margin:2px 0;">👤 ${escapeHtml(o.name)} さま（⏰ ${escapeHtml(o.time)}）</div>
+        <div style="font-size:0.9rem;">🧸 ${escapeHtml(o.item)}</div>
+        ${!o.done ? `<button class="btn" style="padding:8px; margin-top:10px; font-size:0.9rem;" onclick="markDone(${idx})">💮 ごあんない完了スタンプを押す</button>` : ''}
+      </div>
+    `).join('');
+  }
+
+  function markDone(idx) {
+    const orders = JSON.parse(localStorage.getItem('kansuku_orders') || '[]');
+    orders[idx].done = true;
+    localStorage.setItem('kansuku_orders', JSON.stringify(orders));
+    playChime();
+    renderOrders();
+  }
+
+  // 効果音
+  function playChime() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      osc.frequency.setValueAtTime(1174.66, ctx.currentTime + 0.12);
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.4);
+    } catch(e) {}
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+</script>
+</body>
+</html>
