@@ -33,7 +33,7 @@
   }
   header h1 {
     margin: 0;
-    font-size: 1.5rem;
+    font-size: 1.45rem;
     color: var(--pink);
     text-shadow: 1px 1px 0 var(--yellow);
   }
@@ -97,6 +97,28 @@
   }
   input:focus, select:focus { border-color: var(--pink); }
 
+  .date-chips {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .chip {
+    flex: 1;
+    padding: 8px 4px;
+    border: 2px solid var(--pink-light);
+    border-radius: 12px;
+    background: #fff;
+    color: var(--brown);
+    font-weight: bold;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .chip.active {
+    background: var(--pink);
+    color: #fff;
+    border-color: var(--pink);
+  }
+
   .btn {
     display: inline-block;
     width: 100%;
@@ -111,6 +133,8 @@
     background: linear-gradient(90deg, #ff85a2, #ff9ebb);
     box-shadow: 0 4px 0 #e0577b;
     transition: transform 0.1s;
+    text-align: center;
+    text-decoration: none;
   }
   .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #e0577b; }
   .btn-sub {
@@ -126,6 +150,13 @@
   .btn-mint {
     background: linear-gradient(90deg, #38b2ac, #4fd1c5);
     box-shadow: 0 4px 0 #28807b;
+  }
+  .btn-line {
+    background: #06c755;
+    box-shadow: 0 4px 0 #049c42;
+    font-size: 0.95rem;
+    padding: 13px;
+    margin-top: 10px;
   }
 
   /* チケット表示 */
@@ -148,7 +179,7 @@
     color: #fff;
     padding: 4px 14px;
     border-radius: 20px;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     font-weight: bold;
   }
   .qr-box {
@@ -159,19 +190,23 @@
     margin: 12px 0;
     border: 2px solid var(--pink-light);
   }
-  .qr-box img { width: 190px; height: 190px; display: block; }
+  .qr-box img { width: 180px; height: 180px; display: block; }
   .ticket-info {
     text-align: left;
     background: #fff;
     padding: 12px;
     border-radius: 12px;
-    font-size: 0.9rem;
-    line-height: 1.6;
+    font-size: 0.95rem;
+    line-height: 1.7;
   }
-  .spell-box {
-    margin-top: 10px;
-    font-size: 0.75rem;
-    color: #888;
+  .step-note {
+    background: #fff3cd;
+    border-radius: 12px;
+    padding: 10px;
+    font-size: 0.82rem;
+    margin-top: 12px;
+    text-align: left;
+    line-height: 1.5;
   }
 
   /* 店長受付画面 */
@@ -183,17 +218,48 @@
     border: 3px solid var(--mint-dark);
     display: none;
   }
+  .filter-bar {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    align-items: center;
+  }
+  .date-header {
+    background: var(--pink-light);
+    color: var(--brown);
+    font-weight: bold;
+    padding: 6px 12px;
+    border-radius: 10px;
+    margin-top: 16px;
+    font-size: 0.9rem;
+  }
   .order-card {
     background: var(--cream);
     border: 2px solid var(--pink-light);
     border-radius: 16px;
     padding: 14px;
-    margin-top: 12px;
+    margin-top: 8px;
     position: relative;
   }
-  .order-card.done {
+  .order-card.checked-in {
     background: #f0fdf4;
     border-color: #86efac;
+  }
+  .status-badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: bold;
+    padding: 2px 8px;
+    border-radius: 8px;
+    margin-left: 6px;
+  }
+  .status-reserved {
+    background: #fef08a;
+    color: #854d0e;
+  }
+  .status-arrived {
+    background: #bbf7d0;
+    color: #166534;
   }
   .stamp {
     position: absolute;
@@ -208,9 +274,11 @@
     font-size: 0.85rem;
   }
   .manual-box {
-    margin-top: 16px;
-    padding-top: 14px;
-    border-top: 2px dotted #ddd;
+    margin-top: 18px;
+    padding: 14px;
+    background: #f8fafc;
+    border-radius: 16px;
+    border: 2px dashed #cbd5e1;
   }
 </style>
 </head>
@@ -222,8 +290,8 @@
 </header>
 
 <div class="tabs">
-  <button class="tab-btn active" onclick="switchTab('guest')">🎟 おきゃくさん予約</button>
-  <button class="tab-btn" onclick="switchTab('staff')">👑 店長うけつけ</button>
+  <button class="tab-btn active" id="tab-guest" onclick="switchTab('guest')">🎟 おきゃくさん予約</button>
+  <button class="tab-btn" id="tab-staff" onclick="switchTab('staff')">👑 店長うけつけ</button>
 </div>
 
 <div class="container">
@@ -236,6 +304,14 @@
         <input type="text" id="guestName" placeholder="例：パパ、ママ">
         <button class="btn btn-sub" onclick="randomName()">🎲 おまかせ</button>
       </div>
+
+      <label>らいてん日</label>
+      <div class="date-chips">
+        <button class="chip active" onclick="setQuickDate(0, this)">今日</button>
+        <button class="chip" onclick="setQuickDate(1, this)">明日</button>
+        <button class="chip" onclick="setQuickDate(2, this)">明後日</button>
+      </div>
+      <input type="date" id="visitDate" onchange="clearChips()">
 
       <label>らいてん時間</label>
       <select id="visitTime">
@@ -274,19 +350,30 @@
 
     <!-- 店長受付画面 -->
     <div id="staff" class="section">
-      <p style="margin:0; font-size:0.9rem;">おきゃくさんのQRコードをカメラでよみとってね！</p>
-      <button class="btn btn-mint" id="scanBtn" onclick="toggleScanner()">📷 カメラでQR読み取りスタート</button>
+      <p style="margin:0; font-size:0.9rem;">おきゃくさんが来たらQRコードをよみとってね！</p>
+      <button class="btn btn-mint" id="scanBtn" onclick="toggleScanner()">📷 カメラでQRチェックイン</button>
       <div id="reader"></div>
 
-      <div class="manual-box">
-        <label style="margin-top:0; font-size:0.85rem;">カメラが使えない時は「じゅもん」を貼り付け：</label>
-        <div class="row">
-          <input type="text" id="spellInput" placeholder="KANSUKU|...">
-          <button class="btn btn-sub" onclick="importFromSpell()">登録</button>
+      <details class="manual-box">
+        <summary style="font-weight:bold; font-size:0.85rem; cursor:pointer;">✍️ 店長が直接よやくを追加する</summary>
+        <div style="margin-top:10px;">
+          <input type="text" id="mName" placeholder="おなまえ（例：パパ）" style="margin-bottom:6px;">
+          <div class="row" style="margin-bottom:6px;">
+            <input type="date" id="mDate">
+            <input type="time" id="mTime" value="17:00">
+          </div>
+          <input type="text" id="mItem" placeholder="スクイーズ名" value="店長おすすめセット✨" style="margin-bottom:8px;">
+          <button class="btn btn-sub" style="width:100%; padding:10px;" onclick="addManualOrder()">＋ 事前よやくリストに入れる</button>
         </div>
-      </div>
+      </details>
 
-      <label style="margin-top:20px;">📋 本日のよやくリスト</label>
+      <div class="filter-bar">
+        <label style="margin:0; flex:1;">📋 よやくリスト</label>
+        <select id="dateFilter" onchange="renderOrders()" style="width:auto; padding:6px 10px; font-size:0.85rem;">
+          <option value="all">すべての日付</option>
+          <option value="today">今日のよやくだけ</option>
+        </select>
+      </div>
       <div id="orderList"></div>
     </div>
 
@@ -297,17 +384,62 @@
   let html5QrCode = null;
   let isScanning = false;
 
-  // タブ切り替え
+  function getTodayStr(offsetDays = 0) {
+    const d = new Date();
+    d.setDate(d.getDate() + offsetDays);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  function formatJpDate(dateStr) {
+    if (!dateStr) return '日付なし';
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const dt = new Date(y, m - 1, d);
+    const w = ['日', '月', '火', '水', '木', '金', '土'][dt.getDay()];
+    const today = getTodayStr(0);
+    const tomorrow = getTodayStr(1);
+    let badge = '';
+    if (dateStr === today) badge = '【今日】';
+    else if (dateStr === tomorrow) badge = '【明日】';
+    return `${badge}${m}月${d}日(${w})`;
+  }
+
+  // URLパラメータから事前予約を自動取り込み（LINEリンク用）
+  window.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('visitDate').value = getTodayStr(0);
+    document.getElementById('mDate').value = getTodayStr(0);
+
+    const params = new URLSearchParams(window.location.search);
+    const addParam = params.get('add');
+    if (addParam) {
+      // URLのパラメータを消してリロード時の重複防止
+      window.history.replaceState({}, document.title, window.location.pathname);
+      switchTab('staff');
+      registerOrder(addParam, 'reserved');
+    }
+  });
+
+  function setQuickDate(offset, btn) {
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('visitDate').value = getTodayStr(offset);
+  }
+
+  function clearChips() {
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  }
+
   function switchTab(tab) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    event.target.classList.add('active');
+    document.getElementById('tab-' + tab).classList.add('active');
     document.getElementById(tab).classList.add('active');
     if (tab === 'staff') renderOrders();
     if (tab !== 'staff' && isScanning) stopScanner();
   }
 
-  // おまかせ名前
   function randomName() {
     const names = ['パパ', 'ママ', 'うさぎさん', 'くまさん', 'ねこちゃん', '常連さん'];
     document.getElementById('guestName').value = names[Math.floor(Math.random() * names.length)];
@@ -316,13 +448,20 @@
   // チケット発行（お客さん側）
   function createTicket() {
     const name = document.getElementById('guestName').value.trim() || 'おきゃくさま';
+    const date = document.getElementById('visitDate').value || getTodayStr(0);
     const time = document.getElementById('visitTime').value;
     const item = document.getElementById('itemSelect').value;
     const id = 'KS-' + Math.floor(1000 + Math.random() * 9000);
 
-    // QRに埋め込む文字列データ（コンパクトにして読み取りやすくする）
-    const payload = `KANSUKU|${id}|${name}|${time}|${item}`;
+    const payload = `KANSUKU|${id}|${name}|${date}|${time}|${item}`;
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=6&data=${encodeURIComponent(payload)}`;
+
+    // 店長がタップするだけで事前予約リストに入る専用URLを作成
+    const baseUrl = window.location.origin + window.location.pathname;
+    const syncUrl = `${baseUrl}?add=${encodeURIComponent(payload)}`;
+
+    const lineText = `【カンスク屋 事前よやく】\n👤 ${name} さま\n📅 ${formatJpDate(date)} ${time}\n🧸 ${item}\n\n👇店長はここをタップしてリストに入れてね！\n${syncUrl}`;
+    const lineShareUrl = `https://line.me/R/msg/text/?${encodeURIComponent(lineText)}`;
 
     document.getElementById('ticketArea').innerHTML = `
       <div class="ticket">
@@ -332,32 +471,23 @@
         </div>
         <div class="ticket-info">
           👤 <b>おなまえ：</b>${escapeHtml(name)} さま<br>
-          ⏰ <b>らいてん：</b>${escapeHtml(time)}<br>
+          📅 <b>らいてん日：</b>${escapeHtml(formatJpDate(date))}<br>
+          ⏰ <b>じかん：</b>${escapeHtml(time)}<br>
           🧸 <b>おめあて：</b>${escapeHtml(item)}
         </div>
-        <p style="font-size:0.85rem; margin:12px 0 6px; font-weight:bold; color:#e0577b;">
-          お店についたら店長にこの画面を見せてね！
-        </p>
-        <div class="spell-box">
-          <button class="btn btn-sub" style="font-size:0.75rem; padding:6px 10px;" onclick="copySpell('${escapeHtml(payload)}')">📋 じゅもんをコピー</button>
+        <div class="step-note">
+          <b>① まずは下の緑ボタンで店長に事前よやくを送ろう！</b><br>
+          <b>② お店についたら上のQRコードを店長に見せてチェックイン！</b>
         </div>
+        <a href="${lineShareUrl}" target="_blank" class="btn btn-line">💬 LINEで店長に事前よやくを送る</a>
       </div>
     `;
   }
 
-  function copySpell(text) {
-    navigator.clipboard.writeText(text).then(() => {
-      alert('じゅもんをコピーしました！LINEなどで店長に送れます。');
-    });
-  }
-
   // QRスキャナ制御（店長側）
   function toggleScanner() {
-    if (isScanning) {
-      stopScanner();
-    } else {
-      startScanner();
-    }
+    if (isScanning) stopScanner();
+    else startScanner();
   }
 
   function startScanner() {
@@ -368,16 +498,14 @@
       { facingMode: "environment" },
       { fps: 10, qrbox: { width: 220, height: 220 } },
       (decodedText) => {
-        if (registerPayload(decodedText)) {
-          stopScanner();
-        }
+        if (registerOrder(decodedText, 'arrived')) stopScanner();
       },
       () => {}
     ).then(() => {
       isScanning = true;
       document.getElementById('scanBtn').textContent = '⏹ カメラをとめる';
-    }).catch(err => {
-      alert('カメラを起動できませんでした。HTTPS環境（tiiny.hostやGitHub Pages等）で開いているか確認してね！');
+    }).catch(() => {
+      alert('カメラを起動できませんでした。ChromeやSafariで開いているか確認してね！');
       readerEl.style.display = 'none';
     });
   }
@@ -386,73 +514,124 @@
     if (html5QrCode && isScanning) {
       html5QrCode.stop().then(() => {
         document.getElementById('reader').style.display = 'none';
-        document.getElementById('scanBtn').textContent = '📷 カメラでQR読み取りスタート';
+        document.getElementById('scanBtn').textContent = '📷 カメラでQRチェックイン';
         isScanning = false;
       });
     }
   }
 
-  // じゅもん手動登録
-  function importFromSpell() {
-    const val = document.getElementById('spellInput').value.trim();
-    if (registerPayload(val)) {
-      document.getElementById('spellInput').value = '';
-    }
+  function addManualOrder() {
+    const name = document.getElementById('mName').value.trim() || 'おきゃくさま';
+    const date = document.getElementById('mDate').value || getTodayStr(0);
+    const time = document.getElementById('mTime').value || '17:00';
+    const item = document.getElementById('mItem').value.trim() || 'スクイーズ';
+    const id = 'KS-' + Math.floor(1000 + Math.random() * 9000);
+    registerOrder(`KANSUKU|${id}|${name}|${date}|${time}|${item}`, 'reserved');
+    document.getElementById('mName').value = '';
   }
 
-  // 予約データの解析と保存
-  function registerPayload(text) {
+  // mode: 'reserved'（事前予約リストへ追加） or 'arrived'（来店QRチェックイン）
+  function registerOrder(text, mode) {
     if (!text.startsWith('KANSUKU|')) {
-      alert('カンスク屋の予約QRコードではないみたいです！');
+      alert('カンスク屋の予約データではないみたいです！');
       return false;
     }
     const parts = text.split('|');
-    if (parts.length < 5) return false;
+    if (parts.length < 6) return false;
+    const [, id, name, date, time, item] = parts;
 
-    const [, id, name, time, item] = parts;
     const orders = JSON.parse(localStorage.getItem('kansuku_orders') || '[]');
+    const existing = orders.find(o => o.id === id);
 
-    if (orders.some(o => o.id === id)) {
-      alert(`「${name} さま（${id}）」はすでにうけつけ済みです！`);
-      return true;
+    if (existing) {
+      if (mode === 'arrived') {
+        existing.arrived = true;
+        localStorage.setItem('kansuku_orders', JSON.stringify(orders));
+        playChime();
+        alert(`🎉 いらっしゃいませ！\n事前よやく済みの「${name} さま」がご来店（チェックイン）しました！`);
+        renderOrders();
+        return true;
+      } else {
+        alert(`「${name} さま（${id}）」はすでに事前よやくリストに入っています！`);
+        renderOrders();
+        return true;
+      }
     }
 
-    orders.unshift({ id, name, time, item, done: false });
+    const arrived = (mode === 'arrived');
+    orders.push({ id, name, date, time, item, arrived, done: false });
     localStorage.setItem('kansuku_orders', JSON.stringify(orders));
     playChime();
-    alert(`🎉 ピコン！\n${name} さま（${time}）のよやくを受け付けました！`);
+
+    if (mode === 'reserved') {
+      alert(`📩 事前よやくを受け付けました！\n${formatJpDate(date)} ${time}\n${name} さま（${item}）`);
+    } else {
+      alert(`🎉 ご来店チェックイン！\n${formatJpDate(date)} ${time}\n${name} さまを受け付けました！`);
+    }
     renderOrders();
     return true;
   }
 
-  // 受付リスト描画
   function renderOrders() {
-    const orders = JSON.parse(localStorage.getItem('kansuku_orders') || '[]');
+    let orders = JSON.parse(localStorage.getItem('kansuku_orders') || '[]');
+    const filter = document.getElementById('dateFilter').value;
+    const today = getTodayStr(0);
+
+    if (filter === 'today') {
+      orders = orders.filter(o => (o.date || today) === today);
+    }
+
+    orders.sort((a, b) => {
+      const da = (a.date || today) + ' ' + a.time;
+      const db = (b.date || today) + ' ' + b.time;
+      return da.localeCompare(db);
+    });
+
     const listEl = document.getElementById('orderList');
     if (orders.length === 0) {
-      listEl.innerHTML = '<p style="text-align:center; color:#999; font-size:0.9rem;">まだよやくはありません</p>';
+      listEl.innerHTML = '<p style="text-align:center; color:#999; font-size:0.9rem; margin-top:20px;">よやくはまだありません</p>';
       return;
     }
-    listEl.innerHTML = orders.map((o, idx) => `
-      <div class="order-card ${o.done ? 'done' : ''}">
-        ${o.done ? '<div class="stamp">うけつけ済 💮</div>' : ''}
-        <div style="font-size:0.8rem; color:#888;">${escapeHtml(o.id)}</div>
-        <div style="font-size:1.05rem; font-weight:bold; margin:2px 0;">👤 ${escapeHtml(o.name)} さま（⏰ ${escapeHtml(o.time)}）</div>
-        <div style="font-size:0.9rem;">🧸 ${escapeHtml(o.item)}</div>
-        ${!o.done ? `<button class="btn" style="padding:8px; margin-top:10px; font-size:0.9rem;" onclick="markDone(${idx})">💮 ごあんない完了スタンプを押す</button>` : ''}
-      </div>
-    `).join('');
+
+    let currentGroup = '';
+    let html = '';
+
+    orders.forEach(o => {
+      const dStr = o.date || today;
+      if (dStr !== currentGroup) {
+        currentGroup = dStr;
+        html += `<div class="date-header">📅 ${escapeHtml(formatJpDate(dStr))}</div>`;
+      }
+      const badge = o.arrived
+        ? '<span class="status-badge status-arrived">ご来店済</span>'
+        : '<span class="status-badge status-reserved">事前よやく中</span>';
+
+      html += `
+        <div class="order-card ${o.done ? 'checked-in' : ''}">
+          ${o.done ? '<div class="stamp">ごあんない済 💮</div>' : ''}
+          <div style="font-size:0.8rem; color:#888;">${escapeHtml(o.id)} ${badge}</div>
+          <div style="font-size:1.05rem; font-weight:bold; margin:4px 0;">⏰ ${escapeHtml(o.time)} ／ 👤 ${escapeHtml(o.name)} さま</div>
+          <div style="font-size:0.9rem;">🧸 ${escapeHtml(o.item)}</div>
+          ${!o.done ? `<button class="btn" style="padding:8px; margin-top:10px; font-size:0.9rem;" onclick="markDone('${escapeHtml(o.id)}')">💮 ごあんない完了スタンプを押す</button>` : ''}
+        </div>
+      `;
+    });
+
+    listEl.innerHTML = html;
   }
 
-  function markDone(idx) {
+  function markDone(id) {
     const orders = JSON.parse(localStorage.getItem('kansuku_orders') || '[]');
-    orders[idx].done = true;
+    const target = orders.find(o => o.id === id);
+    if (target) {
+      target.arrived = true;
+      target.done = true;
+    }
     localStorage.setItem('kansuku_orders', JSON.stringify(orders));
     playChime();
     renderOrders();
   }
 
-  // 効果音
   function playChime() {
     try {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -471,7 +650,7 @@
   }
 
   function escapeHtml(str) {
-    return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   }
 </script>
 </body>
